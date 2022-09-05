@@ -1,6 +1,6 @@
 <?php
 
-  class Securite {
+  class Security {
 
     public static function secureHTML($string) {
       return htmlentities($string);
