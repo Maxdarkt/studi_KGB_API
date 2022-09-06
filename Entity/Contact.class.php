@@ -6,7 +6,7 @@ class Contact extends User {
 
   private $roleId = null;
 
-  public function getRoleId(): string {
+  public function getRoleId(): ?string {
     return $this->roleId;
   }
 

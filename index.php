@@ -22,6 +22,8 @@ try {
           $agentsCtrl->displayOneAgent($url[2]);
         } elseif((int)$url[2] && $method === 'DELETE') {
           $agentsCtrl->removeOneAgent($url[2]);
+        } elseif($url[2] === 'newAgent' && $method === 'POST') {
+          $agentsCtrl->newAgent();
         } else {
           throw new Exception("No resources available at this url !");
         }

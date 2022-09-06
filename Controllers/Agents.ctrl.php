@@ -31,28 +31,20 @@ class AgentsController {
       'message' => $message,
       'data' => $agents
     ];
-    http_response_code(200);
-    echo json_encode($response);
-    return;
-    // echo "<pre>";
-    // print_r($agents);
-    // echo "</pre>";
+    Model::sendJSON($response, 200);
   }
 
   public function displayOneAgent($id) {
     // security
     $agentId = (int)Security::secureHTML($id);
     // we call the function to the manager
-    $agent = $this->AgentsManager->findAgentById($agentId);
+    $agent = $this->AgentsManager->getAgentById($agentId);
     // we check if the return is empty
     if(empty($agent)) {
       $response = [
         'message' => 'no data found'
       ];
-  
-      http_response_code(404);
-      echo json_encode($response);
-      return;
+      Model::sendJSON($response, 404);
     }
 
     // we send the data
@@ -61,42 +53,81 @@ class AgentsController {
       'message' => $message,
       'data' => $agent
     ];
-    http_response_code(200);
-    echo json_encode($response);
-    return;
+    Model::sendJSON($response, 200);
   }
 
   public function removeOneAgent($id) {
     // security
     $agentId = (int)Security::secureHTML($id);
     // we call the function to the manager
-    $isAgentExist = $this->AgentsManager->findAgentById($agentId);
+    $isAgentExist = $this->AgentsManager->getAgentById($agentId);
     if(count($isAgentExist) === 0) {
       // we send the data
       $message = "The agent has not found.";
       $response = [
         'message' => $message,
       ];
-      http_response_code(404);
-      echo json_encode($response);
-      return;
+      Model::sendJSON($response, 200);
     }
     // we call the function to the manager
-    $this->AgentsManager->deleteOneAgent($agentId);
+    $row = $this->AgentsManager->deleteAgentById($agentId);
 
     // we send the data
     $message = "The agent has been deleted.";
     $response = [
-      'message' => $message
+      'message' => $message,
+      'row' => $row
     ];
-    http_response_code(200);
-    echo json_encode($response);
-    return;
+    Model::sendJSON($response, 200);
   }
 
-  public function createAgent() {
-    // ...
+  public function newAgent() {
+    // we declare variables (data)
+    $lastname = $_POST['lastname'] ? Security::secureHTML($_POST['lastname']) : null;
+    $firstname = $_POST['firstname'] ? Security::secureHTML($_POST['firstname']) : null;
+    $birthDate = $_POST['birthDate'] ? Security::secureHTML($_POST['birthDate']) : null;
+    $codeName = $_POST['codeName'] ? Security::secureHTML($_POST['codeName']) : null;
+    $nationality = $_POST['nationality'] ? Security::secureHTML($_POST['nationality']) : null;
+    $imageUrl = $_POST['imageUrl'] ? Security::secureHTML($_POST['imageUrl']) : null;
+    $roleId = $_POST['roleId'] ? Security::secureHTML($_POST['roleId']) : null;
+    $skills = $_POST['skills'] ? Security::secureHTML($_POST['skills']) : null;
+    // we check all datas
+    if($lastname === null || $firstname === null || $birthDate === null || $codeName === null || $nationality === null || $roleId === null) {
+      $message = "A data is missing or invalid.";
+      Model::sendJSON($message, 401);
+    }
+    // we create a class Agent
+    $Agent = new Agent();
+    $Agent->setLastname($lastname);
+    $Agent->setFirstName($firstname);
+    $Agent->setbirthDate($birthDate);
+    $Agent->setCodeName($codeName);
+    $Agent->setNationality($nationality);
+    $Agent->setImageUrl($imageUrl);
+    $Agent->setRoleId($roleId);
+    $Agent->setSkills($skills);
+    
+    // create a new Agent
+    $agentId = $this->AgentsManager->createAgent($Agent);
+
+    // we define the id
+    $Agent->setId($agentId);
+
+    //create the agent's skills
+    if($Agent->getSkills()) {
+      $this->AgentsManager->addAgentSkills($Agent);
+    }
+
+    // we retrieve the Agent object
+    $agent = $this->AgentsManager->getAgentById($agentId);
+
+    // we send the data
+    $message = "The agent has been created.";
+    $response = [
+      'message' => $message,
+      'Agent' => $agent
+    ];
+    Model::sendJSON($response, 200);
   }
   
-
 }

@@ -9,17 +9,17 @@ class User {
   private $nationality = null;
   private $imageUrl = null;
 
-  public function getId(): int {
+  public function getId(): ?int {
     return $this->id;
   }
 
-  public function setId(string $id): self {
+  public function setId(?string $id): self {
     $this->id = $id;
 
     return $this;
   }
 
-  public function getLastname(): string {
+  public function getLastname(): ?string {
     return $this->lastname;
   }
 
@@ -29,7 +29,7 @@ class User {
     return $this;
   }
 
-  public function getFirstname(): string {
+  public function getFirstname(): ?string {
     return $this->firstname;
   }
 
@@ -39,7 +39,7 @@ class User {
     return $this;
   }
 
-  public function getBirthDate(): string {
+  public function getBirthDate(): ?string {
     return $this->birthDate;
   }
 
@@ -49,7 +49,7 @@ class User {
     return $this;
   }
 
-  public function getCodeName(): string {
+  public function getCodeName(): ?string {
     return $this->codeName;
   }
 
@@ -59,7 +59,7 @@ class User {
     return $this;
   }
 
-  public function getNationality(): string {
+  public function getNationality(): ?string {
     return $this->nationality;
   }
 
@@ -69,11 +69,11 @@ class User {
     return $this;
   }
 
-  public function getImageUrl(): string {
+  public function getImageUrl(): ?string {
     return $this->imageUrl;
   }
 
-  public function setImageUrl(string $imageUrl): self {
+  public function setImageUrl(?string $imageUrl): self {
     $this->imageUrl = $imageUrl;
 
     return $this;
