@@ -3,6 +3,7 @@
 require_once "Helpers/Security.class.php";
 require_once "Models/Agents.manager.php";
 require_once "Entity/Agent.class.php";
+require_once "Helpers/images.utils.php";
 
 class AgentsController {
 
@@ -88,7 +89,6 @@ class AgentsController {
     $birthDate = $_POST['birthDate'] ? Security::secureHTML($_POST['birthDate']) : null;
     $codeName = $_POST['codeName'] ? Security::secureHTML($_POST['codeName']) : null;
     $nationality = $_POST['nationality'] ? Security::secureHTML($_POST['nationality']) : null;
-    $imageUrl = $_POST['imageUrl'] ? Security::secureHTML($_POST['imageUrl']) : null;
     $roleId = $_POST['roleId'] ? Security::secureHTML($_POST['roleId']) : null;
     $skills = $_POST['skills'] ? Security::secureHTML($_POST['skills']) : null;
     // we check all datas
@@ -96,6 +96,15 @@ class AgentsController {
       $message = "A data is missing or invalid.";
       Model::sendJSON($message, 401);
     }
+
+    if($_FILES['image']['size'] > 0) {
+      $directory = "Public/images/";
+      $filename = addImage($_FILES['image'], $directory);
+      $imageUrl = URL . '/' . $directory . $filename;
+    } else {
+      $imageUrl = null;
+    }
+
     // we create a class Agent
     $Agent = new Agent();
     $Agent->setLastname($lastname);

@@ -2,6 +2,7 @@
 
 define("URL", str_replace("index.php", "", (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]"));
 
+
 require_once "Controllers/Agents.ctrl.php";
 $agentsCtrl = new AgentsController();
 
