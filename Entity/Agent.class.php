@@ -5,6 +5,7 @@ require_once "Entity/User.class.php";
 class Agent extends User {
 
   private $roleId = null;
+  private $skills = null;
 
   public function getRoleId(): ?string {
     return $this->roleId;

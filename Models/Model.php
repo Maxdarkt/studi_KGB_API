@@ -19,7 +19,6 @@ abstract class Model {
     header("Content-Type: application/json");
     http_response_code($codeStatus);
     echo json_encode($response);
-    return;
   }
 
 }

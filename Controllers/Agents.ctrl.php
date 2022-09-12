@@ -33,6 +33,7 @@ class AgentsController {
       'data' => $agents
     ];
     Model::sendJSON($response, 200);
+    return;
   }
 
   public function displayOneAgent($id) {
@@ -46,6 +47,7 @@ class AgentsController {
         'message' => 'no data found'
       ];
       Model::sendJSON($response, 404);
+      return;
     }
 
     // we send the data
@@ -55,6 +57,7 @@ class AgentsController {
       'data' => $agent
     ];
     Model::sendJSON($response, 200);
+    return;
   }
 
   public function removeOneAgent($id) {
@@ -62,16 +65,32 @@ class AgentsController {
     $agentId = (int)Security::secureHTML($id);
     // we call the function to the manager
     $isAgentExist = $this->AgentsManager->getAgentById($agentId);
-    if(count($isAgentExist) === 0) {
+    if(!$isAgentExist) {
       // we send the data
       $message = "The agent has not found.";
       $response = [
         'message' => $message,
       ];
-      Model::sendJSON($response, 200);
+      Model::sendJSON($response, 404);
+      return;
     }
     // we call the function to the manager
     $row = $this->AgentsManager->deleteAgentById($agentId);
+
+    // if no agent has deleted
+    if ($row === 0) {
+      $message = "The agent was found but the deletion failed.";
+      $response = [
+        'message' => $message,
+      ];
+      Model::sendJSON($response, 404);
+      return;
+    }
+    // if an agent has been deleted and imageUrl !== null
+    if($isAgentExist['imageUrl'] !== null) {
+      $filename = explode('Public/images/', $isAgentExist['imageUrl']);
+      unlink("Public/images/" . $filename[1]);
+    }
 
     // we send the data
     $message = "The agent has been deleted.";
@@ -80,6 +99,7 @@ class AgentsController {
       'row' => $row
     ];
     Model::sendJSON($response, 200);
+    return;
   }
 
   public function newAgent() {
@@ -97,7 +117,8 @@ class AgentsController {
       Model::sendJSON($message, 401);
     }
 
-    if($_FILES['image']['size'] > 0) {
+    // if a file is uploaded
+    if($_FILES && $_FILES['image']['size'] > 0) {
       $directory = "Public/images/";
       $filename = addImage($_FILES['image'], $directory);
       $imageUrl = URL . '/' . $directory . $filename;
@@ -124,7 +145,7 @@ class AgentsController {
 
     //create the agent's skills
     if($Agent->getSkills()) {
-      $this->AgentsManager->addAgentSkills($Agent);
+      $this->AgentsManager->addManySkillsToAgent($Agent);
     }
 
     // we retrieve the Agent object
@@ -137,6 +158,97 @@ class AgentsController {
       'Agent' => $agent
     ];
     Model::sendJSON($response, 200);
+    return;
+  }
+
+
+  public function modifyAgent($id) {
+    // security
+    $agentId = (int)Security::secureHTML($id);
+    // we call the function to the manager
+    $agentExist = $this->AgentsManager->getAgentById($agentId);
+    if(!$agentExist) {
+      // we send the data
+      $message = "The agent has not found.";
+      $response = [
+        'message' => $message,
+      ];
+      Model::sendJSON($response, 404);
+      return;
+    }
+
+    // we declare variables (data)
+    $lastname = $_POST['lastname'] ? Security::secureHTML($_POST['lastname']) : $agentExist['lastname'];
+    $firstname = $_POST['firstname'] ? Security::secureHTML($_POST['firstname']) : $agentExist['firstname'];
+    $birthDate = $_POST['birthDate'] ? Security::secureHTML($_POST['birthDate']) : $agentExist['birthDate'];
+    $codeName = $_POST['codeName'] ? Security::secureHTML($_POST['codeName']) : $agentExist['codeName'];
+    $nationality = $_POST['nationality'] ? Security::secureHTML($_POST['nationality']) : $agentExist['nationality'];
+    $roleId = $_POST['roleId'] ? Security::secureHTML($_POST['roleId']) : $agentExist['roleId'];
+
+    // if a file is uploaded
+    if($_FILES['image']['size'] > 0) {
+      // if an image is already saved
+      if($agentExist['imageUrl'] !== null) {
+        $filename = explode('Public/images/', $agentExist['imageUrl']);
+        unlink("Public/images/" . $filename[1]);
+      }
+      $directory = "Public/images/";
+      $filename = addImage($_FILES['image'], $directory);
+      $imageUrl = URL . '/' . $directory . $filename;
+    } else {
+      $imageUrl = $agentExist['imageUrl'] ?? null;
+    }
+    // we create a class Agent
+    $Agent = new Agent();
+    $Agent->setId($agentId);
+    $Agent->setLastname($lastname);
+    $Agent->setFirstName($firstname);
+    $Agent->setbirthDate($birthDate);
+    $Agent->setCodeName($codeName);
+    $Agent->setNationality($nationality);
+    $Agent->setImageUrl($imageUrl);
+    $Agent->setRoleId($roleId);
+
+    // we saved the agent
+    $this->AgentsManager->updateAgent($Agent);
+
+    // we update the agent's skills
+    if(!empty($_POST['skills'])) {
+      $oldSkills = $this->AgentsManager->getSkills($agentId);
+      // we declare array
+      $oldSkillsArray = explode(',', $oldSkills);
+      $newSkillsArray = explode(',', $_POST['skills']);
+
+      // we compare newSkillsArray vs oldSkillsArray
+      foreach($newSkillsArray as $value) {
+        // if the skill does not exist, it is added
+        if(array_search($value, $oldSkillsArray) === false) {
+          $this->AgentsManager->addOneSkillToAgent($agentId, $value);
+        }
+      }
+      $row = 0;
+      // we compare oldSkillsArray vs newSkillsArray
+      foreach($oldSkillsArray as $value) {
+        // if the skill does not exist, it is deleted
+        if(array_search($value, $newSkillsArray) === false) {
+          $row = $this->AgentsManager->deleteOneSkillToAgent($agentId, $value);
+          echo "delete" . $value . "<br/>";
+        }
+      }
+      echo $row;
+    }
+
+    // we retrieve agent
+    $agent = $this->AgentsManager->getAgentById($agentId);
+
+    // we send the data
+    $message = "The agent has been uploaded.";
+    $response = [
+      'message' => $message,
+      'Agent' => $agent
+    ];
+    Model::sendJSON($response, 200);
+    return;
   }
   
 }
